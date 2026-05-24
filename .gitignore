@@ -1,0 +1,8 @@
+*.apk
+*.wav
+*.pt
+*.bin
+local.properties
+.gradle/
+build/
+.DS_Store
