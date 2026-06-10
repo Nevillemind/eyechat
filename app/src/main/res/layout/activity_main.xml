@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:background="#0d0d1a"
+    android:padding="16dp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:textColor="#00e676"
+        android:gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        android:text="TeleChat" />
+
+    <TextView
+        android:textSize="12sp"
+        android:textColor="#666666"
+        android:gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:text="BITS Live Communication" />
+
+    <TextView
+        android:id="@+id/statusText"
+        android:textSize="14sp"
+        android:textColor="#ff5252"
+        android:gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="Status: Disconnected" />
+
+    <Button
+        android:id="@+id/connectButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:text="Connect to Glasses" />
+
+    <TextView
+        android:id="@+id/relayStatus"
+        android:textSize="12sp"
+        android:textColor="#ff5252"
+        android:gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="Relay: Not connected" />
+
+    <ScrollView
+        android:id="@+id/chatScroll"
+        android:background="#1a1a2e"
+        android:padding="8dp"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginBottom="8dp"
+        android:layout_weight="1">
+
+        <TextView
+            android:id="@+id/chatDisplay"
+            android:textSize="13sp"
+            android:textColor="#ffffff"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Ready to chat with Doug...\n" />
+    </ScrollView>
+
+    <TextView
+        android:id="@+id/glassesIndicator"
+        android:textSize="11sp"
+        android:textColor="#00e676"
+        android:gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        android:text="" />
+
+    <LinearLayout
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <EditText
+            android:id="@+id/messageInput"
+            android:textColor="#ffffff"
+            android:textColorHint="#666666"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:hint="Type a message..."
+            android:maxLines="3"
+            android:layout_weight="1"
+            android:inputType="text"
+            android:imeOptions="actionSend"
+            android:backgroundTint="#333355" />
+
+        <ImageButton
+            android:id="@+id/sendButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@android:drawable/ic_menu_send"
+            android:contentDescription="Send"
+            android:layout_marginStart="4dp"
+            android:backgroundTint="#00e676" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/micButton"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="#00e676"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="HOLD TO SPEAK"
+        android:backgroundTint="#1a5c3a" />
+
+    <Button
+        android:id="@+id/stopButton"
+        android:textColor="#ffffff"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="STOP DISPLAY"
+        android:backgroundTint="#ff5252" />
+
+    <Button
+        android:id="@+id/rawTestButton"
+        android:textColor="#ffffff"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="RAW SOCKET TEST"
+        android:backgroundTint="#333355" />
+
+</LinearLayout>

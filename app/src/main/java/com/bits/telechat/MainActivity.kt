@@ -118,15 +118,30 @@ class MainActivity : AppCompatActivity() {
                     Log.d("EyeChat", "Gesture tap: type=$gestureType")
                     if (gestureType == 0x01) {
                         lifecycleScope.launch(Dispatchers.IO) {
-                            glassesId?.let { glassesService?.stopDisplaying(it) }
+                            // Show "ready" status instead of killing display
+                            try {
+                                glassesId?.let { gid ->
+                                    val page = G1ServiceCommon.FormattedPage(
+                                        lines = listOf(
+                                            G1ServiceCommon.FormattedLine(text = "Ready", justify = G1ServiceCommon.JustifyLine.CENTER),
+                                            G1ServiceCommon.FormattedLine(text = "", justify = G1ServiceCommon.JustifyLine.LEFT),
+                                            G1ServiceCommon.FormattedLine(text = "Tap to chat", justify = G1ServiceCommon.JustifyLine.CENTER)
+                                        ),
+                                        justify = G1ServiceCommon.JustifyPage.CENTER
+                                    )
+                                    glassesService?.displayTimedFormattedPage(gid, 
+                                        G1ServiceCommon.TimedFormattedPage(page, 30000))
+                                }
+                            } catch (_: Exception) {
+                                glassesId?.let { glassesService?.stopDisplaying(it) }
+                            }
                         }
-                        appendChat("👓 Display cleared (tap)")
+                        appendChat("👓 Ready for next message")
                     }
                 }
                 ACTION_QUICKNOTE_RELEASE -> {
-                    // Auto-clear glasses when starting new recording
+                    // Show ready status — don't kill display
                     lifecycleScope.launch(Dispatchers.IO) {
-                        glassesId?.let { glassesService?.stopDisplaying(it) }
                     }
                     val noteIndex = intent.getIntExtra(EXTRA_NOTE_INDEX, 1)
                     val noteData = intent.getByteArrayExtra(EXTRA_NOTE_DATA)
@@ -206,28 +221,38 @@ class MainActivity : AppCompatActivity() {
         stopButton.setOnClickListener {
             lifecycleScope.launch(Dispatchers.IO) {
                 try {
-                    // Try multiple methods to clear display
+                    // Show ready status instead of killing display
                     glassesId?.let { gid ->
-                        // Method 1: Official stopDisplaying
-                        glassesService?.stopDisplaying(gid)
-                        // Method 2: Send empty text page to overwrite display
-                        try {
-                            glassesService?.displayTextPage(gid, listOf("", "", "", "", ""))
-                        } catch (_: Exception) {}
+                        val page = G1ServiceCommon.FormattedPage(
+                            lines = listOf(
+                                G1ServiceCommon.FormattedLine(text = "Ready", justify = G1ServiceCommon.JustifyLine.CENTER),
+                                G1ServiceCommon.FormattedLine(text = "", justify = G1ServiceCommon.JustifyLine.LEFT),
+                                G1ServiceCommon.FormattedLine(text = "Tap to chat", justify = G1ServiceCommon.JustifyLine.CENTER)
+                            ),
+                            justify = G1ServiceCommon.JustifyPage.CENTER
+                        )
+                        glassesService?.displayTimedFormattedPage(gid,
+                            G1ServiceCommon.TimedFormattedPage(page, 30000))
                     }
                     withContext(Dispatchers.Main) { 
-                        glassesIndicator.text = "Display cleared"
-                        appendChat("🧹 Display cleared (STOP)")
+                        glassesIndicator.text = "Ready ✓"
+                        appendChat("🧹 Display reset to ready")
                     }
-                    // Retry in case glasses are in QuickNote dark period
-                    for (retrySec in listOf(5, 15, 35)) {
-                        delay(retrySec * 1000L)
-                        if (glassesId != null && glassesService != null) {
-                            glassesService?.stopDisplaying(glassesId!!)
-                            try {
-                                glassesService?.displayTextPage(glassesId!!, listOf("", "", "", "", ""))
-                            } catch (_: Exception) {}
-                        }
+                    // Single retry after 5s
+                    delay(5000)
+                    if (glassesId != null && glassesService != null) {
+                        try {
+                            val page2 = G1ServiceCommon.FormattedPage(
+                                lines = listOf(
+                                    G1ServiceCommon.FormattedLine(text = "Ready", justify = G1ServiceCommon.JustifyLine.CENTER),
+                                    G1ServiceCommon.FormattedLine(text = "", justify = G1ServiceCommon.JustifyLine.LEFT),
+                                    G1ServiceCommon.FormattedLine(text = "Tap to chat", justify = G1ServiceCommon.JustifyLine.CENTER)
+                                ),
+                                justify = G1ServiceCommon.JustifyPage.CENTER
+                            )
+                            glassesService?.displayTimedFormattedPage(glassesId!!,
+                                G1ServiceCommon.TimedFormattedPage(page2, 30000))
+                        } catch (_: Exception) {}
                     }
                 } catch (e: Exception) {
                     withContext(Dispatchers.Main) { appendChat("Error clearing: ${e.message}") }
@@ -619,21 +644,12 @@ class MainActivity : AppCompatActivity() {
                             if (body.isNotEmpty() && body != "[]") {
                                 val messages = gson.fromJson(body, Array<RelayMessage>::class.java)
                                 for (msg in messages) {
-                                    if (msg.from == "doug" && msg.id != lastMessageId) {
+                                    if ((msg.from == "doug" || msg.from == "enoch") && msg.id != lastMessageId) {
                                         lastMessageId = msg.id
+                                        val senderLabel = if (msg.from == "enoch") "Enoch" else "Doug"
                                         withContext(Dispatchers.Main) {
-                                            appendChat("Doug: ${msg.text}")
+                                            appendChat("$senderLabel: ${msg.text}")
                                             displayOnGlasses(msg.text)
-                                        }
-                                        // Retry after glasses wake from QuickNote dark period
-                                        lifecycleScope.launch(Dispatchers.Default) {
-                                            for (retrySec in listOf(15, 35, 55)) {
-                                                delay(retrySec * 1000L)
-                                                if (glassesId != null && glassesService != null) {
-                                                    displayOnGlasses(msg.text)
-                                                    Log.d("EyeChat", "Display retry after dark period ($retrySec s)")
-                                                }
-                                            }
                                         }
                                     }
                                 }
@@ -678,7 +694,7 @@ class MainActivity : AppCompatActivity() {
                     lines = padded.map { G1ServiceCommon.FormattedLine(text = it, justify = G1ServiceCommon.JustifyLine.LEFT) },
                     justify = G1ServiceCommon.JustifyPage.CENTER
                 )
-                val timeout = if (index < pages.size - 1) 8000L else Long.MAX_VALUE
+                val timeout = if (index < pages.size - 1) 8000L else 0L
                 val timed = G1ServiceCommon.TimedFormattedPage(page, timeout)
                 glassesService!!.displayTimedFormattedPage(id, timed)
                 glassesIndicator.text = "Page ${index + 1}/${pages.size}" +
